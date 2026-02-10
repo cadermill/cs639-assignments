@@ -1,0 +1,16 @@
+I used a pre-trained word vector (crawl-300d-2M.vec.zip) from FastText at https://fasttext.cc/docs/en/english-vectors.html
+
+
+sst best results:
+Loading model from model.pt
+  -Accuracy: 0.4448 (983/2210)
+  -Save predictions to output.test.txt
+  -Accuracy: 0.4214 (464/1101)
+  -Save predictions to output.dev.txt
+
+cfimbd best results:
+Loading model from model.pt
+  -Accuracy: 0.5246 (256/488)
+  -Save predictions to output.test.txt
+  -Accuracy: 0.9224 (226/245)
+  -Save predictions to output.dev.txt

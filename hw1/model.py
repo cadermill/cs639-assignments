@@ -35,7 +35,7 @@ def load_embedding(vocab, emb_file, emb_size):
     Args:
         vocab: (Vocab), a word vocabulary
         emb_file: (string), the path to the embdding file for loading
-        emb_size: (int), the embedding size (e.g., 300, 100) depending on emb_file
+        emb_size: (int), the embedding size (e.g., 300, 100) on emb_file
     Return:
         emb: (np.array), embedding matrix of size (|vocab|, emb_size) 
     """

@@ -6,7 +6,7 @@ import os
 import sys
 import zipfile
 
-required_files = {'main.py', 'model.py', 'vocab.py', 'sst-dev-output.txt', 'sst-test-output.txt', 'cfimdb-dev-output.txt', 'cfimdb-test-output.txt', 'run_exp.sh'}
+required_files = {'main.py', 'model.py', 'vocab.py', 'sst-dev-output.txt', 'sst-test-output.txt', 'cfimdb-dev-output.txt', 'cfimdb-test-output.txt', 'run_exp.sh', 'README'}
 
 def check_file(file: str, check_aid: str):
     target_prefix = None
@@ -43,23 +43,20 @@ def main(path: str, aid: str):
     aid = aid.strip()
     if os.path.isdir(path):
         with zipfile.ZipFile(f"{aid}.zip", 'w') as zz:
-            for root, dirs, files in os.walk(path):
+            for root, _, files in os.walk(path):
                 if '.git' in root or '__pycache__' in root:
                     continue  # ignore some parts
                 for file in files:
-                    if any(file.endswith(s) for s in ['.pdf', '.txt', '.sh', '.py', '.npy']):
+                    if file in required_files:
                         ff = os.path.join(root, file)
                         rpath = os.path.relpath(ff, path)
                         zz.write(ff, os.path.join(".", aid, rpath))
-                        if rpath in required_files:
-                            required_files.remove(rpath)
+                        required_files.remove(file)
         assert len(required_files) == 0, f"Some required files are missing: {required_files}"
-        # --
         print(f"Submission zip file created from DIR={path} for {aid}: {aid}.zip")
         check_file(f'{aid}.zip', aid)
     else:  # directly check
         check_file(path, aid)
-    # --
 
 if __name__ == '__main__':
     main(*sys.argv[1:])

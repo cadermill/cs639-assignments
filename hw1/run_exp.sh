@@ -1,5 +1,5 @@
 # Step 0. Change this to your campus ID
-CAMPUSID='9xx1234567'
+CAMPUSID='9084426882'
 mkdir -p $CAMPUSID
 
 # Step 1. (Optional) Any preprocessing step, e.g., downloading pre-trained word embeddings
@@ -15,7 +15,13 @@ python main.py \
     --test "data/${PREF}-test.txt" \
     --dev_output "${CAMPUSID}/${PREF}-dev-output.txt" \
     --test_output "${CAMPUSID}/${PREF}-test-output.txt" \
-    --model "${CAMPUSID}/${PREF}-model.pt"
+    --model "${CAMPUSID}/${PREF}-model.pt" \
+    --emb_file ./wordEmbedding/crawl-300d-2M.vec \
+    --word_drop 0.2 \
+    --emb_drop 0.4 \
+    --max_train_epoch 10 \
+    --lrate_decay 0.0001 \
+    --grad_clip 1.0
 
 ##  2.2 Run experiments on CF-IMDB
 PREF='cfimdb'
@@ -25,7 +31,11 @@ python main.py \
     --test "data/${PREF}-test.txt" \
     --dev_output "${CAMPUSID}/${PREF}-dev-output.txt" \
     --test_output "${CAMPUSID}/${PREF}-test-output.txt" \
-    --model "${CAMPUSID}/${PREF}-model.pt"
+    --model "${CAMPUSID}/${PREF}-model.pt" \
+    --max_train_epoch 10 \
+    --hid_size 600 \
+    --hid_layer 4 \
+    --grad_clip 10.0
 
 
 # Step 3. Prepare submission:
