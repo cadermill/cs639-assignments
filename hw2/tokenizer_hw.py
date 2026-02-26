@@ -42,8 +42,11 @@ def build_split_expr(special_tokens: list[str]) -> str:
         parts = re.split(split_expr, text)
         parts should include "<|endoftext|>" as an element.
     """
-    # TODO (student): implement
-    raise NotImplementedError
+    if not special_tokens:
+        return ""
+
+    escaped = [re.escape(tok) for tok in sorted(special_tokens, key=len, reverse=True)]
+    return "(" + "|".join(escaped) + ")"
 
 
 def pretokenize_text(text: str, special_tokens: list[str]) -> Counter[tuple[int, ...]]:
@@ -59,8 +62,24 @@ def pretokenize_text(text: str, special_tokens: list[str]) -> Counter[tuple[int,
     - Special tokens should be treated as atomic tokens.
     - For normal text pieces, run PAT and count each match.
     """
-    # TODO: implement
-    raise NotImplementedError
+    counts: Counter[tuple[int, ...]] = Counter()
+
+    split_expr = build_split_expr(special_tokens)
+    parts = re.split(split_expr, text) if split_expr else [text]
+
+    for part in parts:
+        if not part:
+            continue
+
+        if part in special_tokens:
+            bt = tuple(part.encode("utf-8"))
+            counts[bt] += 1
+        else:
+            for match in re.findall(PAT, part):
+                bt = tuple(match.encode("utf-8"))
+                counts[bt] += 1
+
+    return counts
 
 
 def process_chunk(
@@ -81,9 +100,7 @@ def process_chunk(
         f.seek(start)
         chunk = f.read(end - start).decode("utf-8", errors="ignore")
 
-    # TODO: you may directly call pretokenize_text(chunk, special_tokens)
-    # and return it.
-    raise NotImplementedError
+    return pretokenize_text(chunk, special_tokens)
 
 
 def pre_tokenize(
@@ -160,8 +177,21 @@ def count_pairs(
     - sequences are tuples of token IDs (ints), e.g., (104,101,108,108,111)
     - Do not count pairs in sequences of length < 2.
     """
-    # TODO: implement
-    raise NotImplementedError
+    pairs_count = defaultdict(int)
+    pairs_to_sequences = defaultdict(set)
+    sequences_to_pairs = defaultdict(set)
+
+    for seq, count in inp.items():
+        if len(seq) < 2:
+            continue
+
+        for a, b in zip(seq, seq[1:]):
+            pair = (a, b)
+            pairs_count[pair] += count
+            pairs_to_sequences[pair].add(seq)
+            sequences_to_pairs[seq].add(pair)
+
+    return pairs_count, pairs_to_sequences, sequences_to_pairs
 
 
 def merge_pair(
@@ -181,8 +211,32 @@ def merge_pair(
     - Replace all occurrences of (a,b) in a sequence left-to-right.
     - Only sequences that change should appear in keys_to_remove/keys_to_add.
     """
-    # TODO: implement
-    raise NotImplementedError
+    keys_to_remove = []
+    keys_to_add = []
+
+    a, b = old
+    affected_sequences = pairs_to_sequences.get(old, set())
+
+    for seq in affected_sequences:
+        count = byte_tokens_count[seq]
+        new_seq = []
+        i = 0
+        changed = False
+
+        while i < len(seq):
+            if i < len(seq) - 1 and seq[i] == a and seq[i + 1] == b:
+                new_seq.append(new)
+                i += 2
+                changed = True
+            else:
+                new_seq.append(seq[i])
+                i += 1
+
+        if changed:
+            keys_to_remove.append(seq)
+            keys_to_add.append((new_seq, count))
+
+    return keys_to_remove, keys_to_add
 
 
 def select_best_pair(
