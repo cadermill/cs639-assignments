@@ -7,6 +7,7 @@ from torch.utils.data import Dataset, DataLoader
 from sklearn.metrics import classification_report, f1_score, recall_score, accuracy_score
 
 # change it with respect to the original model
+import config
 from tokenizer import BertTokenizer
 from bert import BertModel
 from optimizer import AdamW
@@ -38,12 +39,19 @@ class BertSentClassifier(torch.nn.Module):
                 param.requires_grad = True
 
         # todo
-        raise NotImplementedError
+        self.dropout = torch.nn.Dropout(config.hidden_dropout_prob)
+        self.classifier = torch.nn.Linear(config.hidden_size, config.num_labels)
 
     def forward(self, input_ids, attention_mask):
         # todo
         # the final bert contextualize embedding is the hidden state of [CLS] token (the first token)
-        raise NotImplementedError
+        outputs = self.bert(input_ids, attention_mask)
+        pooled_output = outputs['pooler_output']  # [CLS] embedding
+
+        pooled_output = self.dropout(pooled_output)
+        logits = self.classifier(pooled_output)
+
+        return F.log_softmax(logits, dim=1)
 
 # create a custom Dataset Class to be used for the dataloader
 class BertDataset(Dataset):
@@ -99,7 +107,7 @@ def create_data(filename, flag='train'):
     num_labels = {}
     data = []
 
-    with open(filename, 'r') as fp:
+    with open(filename, 'r', encoding = "utf-8") as fp:
         for line in fp:
             label, org_sent = line.split(' ||| ')
             sent = org_sent.lower().strip()

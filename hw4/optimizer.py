@@ -38,23 +38,43 @@ class AdamW(Optimizer):
                 if grad.is_sparse:
                     raise RuntimeError("Adam does not support sparse gradients, please consider SparseAdam instead")
 
-                raise NotImplementedError()
-
                 # State should be stored in this dictionary
                 state = self.state[p]
 
-                # Access hyperparameters from the `group` dictionary
                 alpha = group["lr"]
 
-                # Update first and second moments of the gradients
+                # Initialize state if needed
+                if len(state) == 0:
+                    state["step"] = 0
+                    state["m"] = torch.zeros_like(p.data)
+                    state["v"] = torch.zeros_like(p.data)
 
-                # Bias correction
-                # Please note that we are using the "efficient version" given in
-                # https://arxiv.org/abs/1412.6980
+                m, v = state["m"], state["v"]
+                beta1, beta2 = group["betas"]
+                eps = group["eps"]
+                weight_decay = group["weight_decay"]
+                correct_bias = group["correct_bias"]
+
+                state["step"] += 1
+                t = state["step"]
+
+                # Update first and second moments
+                m.mul_(beta1).add_(grad, alpha=1 - beta1)
+                v.mul_(beta2).addcmul_(grad, grad, value=1 - beta2)
+
+                # Bias correction (efficient version)
+                if correct_bias:
+                    bias_correction1 = 1 - beta1 ** t
+                    bias_correction2 = 1 - beta2 ** t
+                    alpha_t = alpha * (bias_correction2 ** 0.5) / bias_correction1
+                else:
+                    alpha_t = alpha
 
                 # Update parameters
+                p.data.addcdiv_(m, (v.sqrt() + eps), value=-alpha_t)
 
-                # Add weight decay after the main gradient-based updates.
-                # Please note that the learning rate should be incorporated into this update.
+                # Decoupled weight decay
+                if weight_decay > 0:
+                    p.data.add_(p.data, alpha=-alpha * weight_decay)
 
         return loss
