@@ -251,12 +251,12 @@ def test(args):
         dev_acc, dev_f1, dev_pred, dev_true, dev_sents = model_eval(dev_dataloader, model, device)
         test_acc, test_f1, test_pred, test_true, test_sents = model_eval(test_dataloader, model, device)
 
-        with open(args.dev_out, "w+") as f:
+        with open(args.dev_out, "w+", encoding = "utf-8") as f:
             print(f"dev acc :: {dev_acc :.3f}")
             for s, t, p in zip(dev_sents, dev_true, dev_pred):
                 f.write(f"{s} ||| {t} ||| {p}\n")
 
-        with open(args.test_out, "w+") as f:
+        with open(args.test_out, "w+", encoding = "utf-8") as f:
             print(f"test acc :: {test_acc :.3f}")
             for s, t, p in zip(test_sents, test_true, test_pred):
                 f.write(f"{s} ||| {t} ||| {p}\n")
